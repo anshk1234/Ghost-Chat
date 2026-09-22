@@ -1,0 +1,44 @@
+{
+  "name": "ghost-chat",
+  "version": "1.0.0",
+  "description": "Zero-knowledge, end-to-end encrypted ephemeral LAN chat server",
+  "main": "server/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"vite\" \"nodemon server/index.js\"",
+    "build": "vite build",
+    "start": "node server/index.js",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "e2ee",
+    "encryption",
+    "chat",
+    "ephemeral",
+    "lan",
+    "zero-knowledge",
+    "privacy",
+    "websocket"
+  ],
+  "author": "anshk1234",
+  "license": "MIT",
+  "dependencies": {
+    "@noble/ciphers": "^2.4.0",
+    "@noble/hashes": "^2.4.0",
+    "express": "^4.21.2",
+    "lucide-react": "^1.16.0",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.9",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "vite": "^6.0.7"
+  }
+}
