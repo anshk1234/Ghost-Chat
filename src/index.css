@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #090a0f;
+    color: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+    user-select: none;
+  }
+
+  /* Custom stealth scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #090a0f;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1f293d;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #00ffcc55;
+  }
+}
+
+/* Glassmorphism card */
+.ghost-card {
+  background: rgba(19, 24, 34, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ghost-card-glow {
+  background: rgba(19, 24, 34, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 255, 204, 0.25);
+  box-shadow: 0 0 20px rgba(0, 255, 204, 0.07);
+}
+
+/* Subtle glowing input */
+.ghost-input {
+  background: rgba(13, 17, 23, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+.ghost-input:focus {
+  border-color: #00ffcc;
+  box-shadow: 0 0 12px rgba(0, 255, 204, 0.25);
+  outline: none;
+}
+
+/* Cyberpunk accent button */
+.ghost-btn-primary {
+  background: linear-gradient(135deg, #00ffcc 0%, #00b4d8 100%);
+  color: #090a0f;
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ghost-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 18px rgba(0, 255, 204, 0.4);
+}
+.ghost-btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Ghost text glow */
+.text-ghost-glow {
+  text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+}
+
+/* Matrix/Cipher flicker effect */
+@keyframes cipherGlitch {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; text-shadow: 0 0 8px rgba(0, 255, 204, 0.8); }
+  100% { opacity: 0.9; }
+}
+.cipher-text {
+  animation: cipherGlitch 3s infinite;
+}
