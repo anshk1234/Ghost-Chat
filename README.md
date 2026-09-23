@@ -1,51 +1,70 @@
-# 👻 Ghost Chat
+# 👻 Ghost Chat (P2P SSH Edition)
 
-> **Zero-Knowledge, End-to-End Encrypted, Ephemeral LAN Chat Server**  
-> Private, self-hosted, browser-based messaging with zero cloud dependencies and zero logs.
+> **Decentralized, Direct Peer-to-Peer Encrypted Terminal Messenger Powered by SSH**  
+> Direct device-to-device communication with zero middlemen, zero tech giants, and 100% local-first data privacy.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-00ffcc.svg)](LICENSE)
-[![Node.js](https://img.shields.io/badge/Node.js-v18%2B-green.svg)](https://nodejs.org/)
-[![Security: AES-256-GCM](https://img.shields.io/badge/Security-AES--256--GCM-blueviolet.svg)](#security--cryptography)
-[![Zero Knowledge](https://img.shields.io/badge/Zero--Knowledge-Verified-00ffcc.svg)](#zero-knowledge-architecture)
+[![Transport: SSH-2](https://img.shields.io/badge/Transport-SSH--2-blueviolet.svg)](#how-it-works)
+[![Storage: Local SQLite](https://img.shields.io/badge/Storage-Local_SQLite-green.svg)](#data-privacy)
+[![Zero Middleman](https://img.shields.io/badge/Zero--Middleman-P2P-00ffcc.svg)](#motivation)
 
 ---
 
-## ⚡ Highlights
+## 🎯 The Motivation
+Many end-to-end encrypted chat apps can still be vulnerable as long as there is a central tech giant involved acting as the relay server, storing metadata, or routing connections.
 
-- **🔒 True End-to-End Encryption (E2EE):** Everything (text, images, files) is encrypted directly in your browser using the native **Web Crypto API (AES-256-GCM)** before leaving your device.
-- **🛡️ Zero-Knowledge Relay:** The server acts as a dumb relay. It only sees encrypted ciphertext blobs and IVs. Even with Wireshark or server memory inspection, messages cannot be decrypted.
-- **🗝️ Client-Side Key Derivation:** Room passphrases are never sent over the network. Keys are derived locally using **PBKDF2-SHA256 (100,000 iterations)** with room-specific salts.
-- **📱 Instant LAN Access & QR Code:** Host it on your laptop or home server and scan the QR code from your phone or tablet on the same Wi-Fi.
-- **📎 Encrypted Media & File Drops:** Share encrypted screenshots, photos, and files up to 25MB with client-side decryption.
-- **🔥 Burn-After-Reading (TTL):** Set messages to automatically self-destruct after 10s, 30s, 1m, 5m, or 1 hour.
-- **🚨 Emergency Panic Button (`Esc` × 2):** Immediately purges all keys from RAM, clears chat history, and switches to a disguise screen.
-- **✨ Synthesized Web Audio:** Modern, subtle sound effects synthesized directly with the Web Audio API—no external MP3 downloads.
+**Ghost Chat P2P removes that middleman entirely.**
+- Devices communicate **directly with one another over SSH**.
+- By entering a recipient's IP address and port, users establish a direct, encrypted TCP tunnel.
+- No central server. No relay. No telemetry.
 
 ---
 
-## 🔐 Security & Cryptography
+## ⚡ How It Works
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Alice as Alice (Browser)
-    participant Relay as Local Server (Zero-Knowledge)
-    actor Bob as Bob (Browser)
+    actor Alice as Alice (Peer A)
+    actor Bob as Bob (Peer B)
 
-    Note over Alice,Bob: Both enter Room ID + Secret Passphrase
-    Alice->>Alice: PBKDF2-SHA256 (100,000 rounds) -> AES-256-GCM Key
-    Bob->>Bob: PBKDF2-SHA256 (100,000 rounds) -> AES-256-GCM Key
-
-    Alice->>Alice: Encrypts "Hello!" with AES-256-GCM + random 12-byte IV
-    Alice->>Relay: Sends { iv, ciphertext } (Encrypted blob)
-    Note over Relay: Relay CANNOT read plaintext!
-    Relay->>Bob: Broadcasts { iv, ciphertext }
-    Bob->>Bob: Decrypts ciphertext using local AES-256-GCM Key
-    Note over Bob: "Hello!" displayed in UI
+    Note over Alice,Bob: Both run Ghost Chat Daemon (Client + SSH Server)
+    Alice->>Bob: Direct SSH Connection (TCP to Bob's IP:2222)
+    Bob-->>Alice: Presents SSH Host Key Fingerprint (SHA256:...)
+    Alice->>Alice: TOFU Verification (Checks local known_hosts in SQLite)
+    Alice->>Bob: Authenticates with local SSH Keypair
+    Note over Alice,Bob: Encrypted SSH Duplex Tunnel Established!
+    Alice->>Bob: JSON Frame: { type: "chat", text: "Direct P2P over SSH!" }
+    Bob->>Bob: Writes message to local SQLite DB (data/ghost_chat.db)
+    Alice->>Alice: Writes message to local SQLite DB (data/ghost_chat.db)
+    Bob->>Alice: JSON Frame: { type: "chat", text: "Zero middlemen!" }
 ```
 
-### Safety Emoji Fingerprints
-Ghost Chat computes a unique **Safety Fingerprint** (Emoji sequence + Hex ID) from the derived encryption key. Participants can visually verify that their emoji sequence matches to guarantee zero Man-in-the-Middle (MITM) attacks.
+1. **Dual-Role Architecture:** Every node simultaneously acts as an **SSH Server** (listening for incoming connections on port `2222` or custom) and an **SSH Client** (dialing recipient IP addresses).
+2. **Standard SSH-2 Encryption:** All traffic is encrypted using standard SSH-2 transport ciphers (ChaCha20-Poly1305, AES-GCM).
+3. **Keypair & Host Key Verification:** Generates an SSH keypair on first run. Employs **TOFU (Trust On First Use)** and records host fingerprints in a local `known_hosts` table to detect and prevent MITM attacks.
+4. **LAN Peer Auto-Discovery:** Background UDP broadcast beacon (`44555`) automatically discovers other Ghost Chat peers running on the same local Wi-Fi / subnet.
+5. **Connection & NAT Keep-Alive:** Periodic ping/pong packets keep firewall NAT state tables active during idle periods.
+6. **Data Privacy (Local SQLite):** Chat history, saved contacts, and known host keys are stored **exclusively in a local SQLite database** (`data/ghost_chat.db`) on your machine. Zero cloud storage.
+
+---
+
+## 🖥️ Terminal UI (TUI) Preview
+
+```
+┌─ 👻 GHOST CHAT | Direct P2P SSH | Alias: Alice | Listen: 192.168.1.15:2222 ──────────────────┐
+│                                                                                              │
+├─ Peers & LAN (Tab) ──────────────┬─ Chatting with: Bob (192.168.1.45:2222) [SSH Encrypted] ─┤
+│                                  │                                                           │
+│ 🟢 Bob (192.168.1.45:2222)       │ [10:42 AM] <Bob> Hey Alice! No middleman server here.     │
+│ 📡 Charlie (192.168.1.80:2222)   │ [10:43 AM] <You> Connected directly over SSH tunnel!      │
+│                                  │                                                           │
+├──────────────────────────────────┴───────────────────────────────────────────────────────────┤
+│ [Message / Command]> Hello Bob!                                                              │
+├──────────────────────────────────────────────────────────────────────────────────────────────┤
+│ [Enter] Send | /connect <ip:port> | /peers | /help | [Tab] Switch Focus | [Ctrl+C] Exit      │
+└──────────────────────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -53,71 +72,60 @@ Ghost Chat computes a unique **Safety Fingerprint** (Emoji sequence + Hex ID) fr
 
 ### Prerequisites
 - [Node.js](https://nodejs.org/) (v18 or higher)
-- npm or bun
 
 ### 1. Install Dependencies
 ```bash
 npm install
 ```
 
-### 2. Run in Development Mode
+### 2. Launch Ghost Chat Terminal UI
 ```bash
-# Runs frontend on :5173 and WebSocket/Express backend on :3000
-npm run dev
+# Start with default settings (port 2222, auto-generated alias)
+npm run chat
+
+# Or specify a custom port and alias
+node bin/ghost-chat.js --port 2222 --alias Alice
 ```
-
-### 3. Production Build & Start
-```bash
-# Build optimized frontend assets
-npm run build
-
-# Start the unified local server
-npm run start
-```
-
-Open your browser to:
-- **Local:** `http://localhost:3000`
-- **LAN (other devices on Wi-Fi):** `http://<your-local-ip>:3000`
 
 ---
 
-## ⌨️ Shortcuts & Hotkeys
+## ⌨️ TUI Commands & Hotkeys
 
-| Hotkey | Action |
+| Command | Action |
 |---|---|
-| `Enter` | Send encrypted message |
-| `Shift` + `Enter` | Insert new line |
-| `Esc` × 2 | **Panic Mode** (Wipe RAM, purge keys, and camouflage screen) |
+| `/connect <ip[:port]>` | Dial a recipient's IP address directly via SSH |
+| `/peers` | List active SSH connections and discovered LAN peers |
+| `/clear` | Clear the current message log |
+| `/help` | Display command help |
+| `/quit` | Shut down and exit |
+| `[Tab]` | Switch focus between the peer sidebar and the message input bar |
+| `[Ctrl+C]` | Exit Ghost Chat |
 
 ---
 
-## 📁 Project Structure
+## 📁 Technical Architecture
 
 ```
 Ghost Chat/
-├── server/
-│   ├── index.js          # Express + WebSocket zero-knowledge relay
-│   └── utils/
-│       └── network.js    # Local network IPv4 auto-detection
-├── src/
-│   ├── crypto/
-│   │   └── e2ee.js       # Web Crypto API AES-GCM + PBKDF2 engine
-│   ├── hooks/
-│   │   ├── useWebSocket.js # Resilient WebSocket client hook
-│   │   └── useAudio.js   # Synthesized sound effects
-│   ├── components/
-│   │   ├── Lobby.jsx     # Room creation & key derivation
-│   │   ├── ChatRoom.jsx  # Main encrypted chat interface
-│   │   ├── MessageBubble.jsx # Decrypted message bubble & burn timer
-│   │   ├── MessageInput.jsx  # Rich input, attachments & TTL
-│   │   ├── QRCodeModal.jsx   # LAN invite QR generator
-│   │   ├── RoomInfoModal.jsx # Security fingerprint verification
-│   │   └── PanicOverlay.jsx  # Camouflage screen wipe
-│   ├── App.jsx           # Application controller
-│   ├── main.jsx          # React entry
-│   └── index.css         # Tailwind styles & ghost stealth theme
-├── package.json
-└── vite.config.js
+├── bin/
+│   └── ghost-chat.js          # CLI executable runner
+├── p2p/
+│   ├── core/
+│   │   └── engine.js          # Central P2P orchestrator
+│   ├── ssh/
+│   │   ├── keys.js            # SSH Keypair generator & SHA256 fingerprints
+│   │   ├── server.js          # Embedded direct SSH Server
+│   │   ├── client.js          # Direct SSH Client with host verification
+│   │   └── protocol.js        # Newline-delimited JSON stream framing
+│   ├── storage/
+│   │   └── database.js        # Local SQLite storage (messages, contacts, known_hosts)
+│   ├── network/
+│   │   ├── discovery.js       # UDP LAN broadcast peer discovery
+│   │   └── interfaces.js      # Local network IP detection
+│   └── tui/
+│       └── app.js             # Blessed interactive terminal UI
+├── data/                      # Local SQLite DB & SSH keys (strictly .gitignored)
+└── package.json
 ```
 
 ---
